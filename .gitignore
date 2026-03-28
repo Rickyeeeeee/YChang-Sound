@@ -1,0 +1,8 @@
+node_modules/
+out/
+.vscode-test/
+.DS_Store
+Untitled-1
+
+# Local build artifacts
+*.vsix
