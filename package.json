@@ -3,8 +3,8 @@
   "displayName": "YChang Sound",
   "description": "6",
   "version": "1.0.9",
-  "publisher": "rickyeeeeee",
-  "icon": "assets/fahh-alert-logo.png",
+  "publisher": "Rickyeeeeee",
+  "icon": "assets/cgv.jpg",
   "repository": {
     "type": "git",
     "url": "https://github.com/Rickyeeeeee/YChang-Sound.git"
@@ -23,12 +23,12 @@
     "configuration": {
       "title": "YChang Sound",
       "properties": {
-        "fahhAlert.enabled": {
+        "ychang-sound.enabled": {
           "type": "boolean",
           "default": true,
           "description": "Enable or disable the error sound on terminal command failure."
         },
-        "fahhAlert.soundFile": {
+        "ychang-sound.soundFile": {
           "type": "string",
           "enum": [
             "error.mp3"
@@ -39,7 +39,7 @@
           "default": "error.mp3",
           "description": "Select the sound clip to play on terminal command failure."
         },
-        "fahhAlert.volume": {
+        "ychang-sound.volume": {
           "type": "number",
           "default": 1,
           "minimum": 0,
