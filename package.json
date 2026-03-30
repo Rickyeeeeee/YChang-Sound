@@ -31,12 +31,13 @@
         "ychang-sound.soundFile": {
           "type": "string",
           "enum": [
+            "YChang-sunny.m4a",
             "error.mp3"
           ],
           "enumItemLabels": [
             "Faah Sound"
           ],
-          "default": "error.mp3",
+          "default": "YChang-sunny.m4a",
           "description": "Select the sound clip to play on terminal command failure."
         },
         "ychang-sound.volume": {
