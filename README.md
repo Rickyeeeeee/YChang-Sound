@@ -9,7 +9,7 @@
 
 ## 📖 Overview
 
-**Y Chang**
+**Y Chang**~ whenever terminal error occurs.
 
 ## ✨ Key Features
 
