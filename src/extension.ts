@@ -36,18 +36,35 @@ export function activate(context: vscode.ExtensionContext) {
 
 function playErrorSound(context: vscode.ExtensionContext) {
     const config = vscode.workspace.getConfiguration('ychang-sound');
-    // const soundFile = config.get<string>('soundFile', 'error.mp3');
-    const soundFile = config.get<string>('soundFile', 'YChang-sunny.mp3');
-    const soundPath = path.join(context.extensionPath, 'sounds', soundFile);
+    const randomize = config.get<boolean>('randomize', true);
+    const soundFiles = [
+        'YChang-bill.mp3',
+        'YChang-jdc.mp3',
+        'YChang-sunny.mp3',
+        'YChang-yaoting.mp3',
+    ];
+    const configuredFile = config.get<string>('soundFile', soundFiles[0]);
 
-    // Check if file exists
-    if (!fs.existsSync(soundPath)) {
+    const candidateFiles = randomize ? soundFiles : [configuredFile];
+    const existingFiles = candidateFiles.filter((file) =>
+        fs.existsSync(path.join(context.extensionPath, 'sounds', file))
+    );
+
+    if (existingFiles.length === 0) {
         vscode.window.showWarningMessage(
-            `YChang Sound: Sound file "${soundFile}" not found in the sounds/ folder. ` +
-            `Please place your sound clip there.`
+            randomize
+                ? 'YChang Sound: No playable random sound files found in the sounds/ folder.'
+                : `YChang Sound: Sound file "${configuredFile}" not found in the sounds/ folder.`
         );
         return;
     }
+
+    const soundFile =
+        existingFiles[Math.floor(Math.random() * existingFiles.length)];
+    const soundPath = path.join(context.extensionPath, 'sounds', soundFile);
+
+    // Check if file exists
+    // soundPath is guaranteed to exist from filtering above
 
     // Use platform-native audio playback (no external dependencies needed)
     const platform = process.platform;

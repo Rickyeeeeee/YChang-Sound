@@ -28,17 +28,21 @@
           "default": true,
           "description": "Enable or disable the error sound on terminal command failure."
         },
+        "ychang-sound.randomize": {
+          "type": "boolean",
+          "default": true,
+          "description": "Randomly choose one of the bundled YChang sounds when a terminal command fails."
+        },
         "ychang-sound.soundFile": {
           "type": "string",
           "enum": [
+            "YChang-bill.mp3",
+            "YChang-jdc.mp3",
             "YChang-sunny.mp3",
-            "error.mp3"
-          ],
-          "enumItemLabels": [
-            "Faah Sound"
+            "YChang-yaoting.mp3"
           ],
           "default": "YChang-sunny.mp3",
-          "description": "Select the sound clip to play on terminal command failure."
+          "description": "Select a specific YChang sound. Used only when randomize is disabled."
         },
         "ychang-sound.volume": {
           "type": "number",
