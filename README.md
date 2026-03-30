@@ -1,5 +1,5 @@
 <div align="center">
-  <h1>???? YChang Sound ????</h1>
+  <h1>🦅🦅 YChang Sound 🦅🦅</h1>
 
   [![Visual Studio Code](https://img.shields.io/badge/VS%20Code-0078d7.svg?logo=visual-studio-code&logoColor=white)](https://code.visualstudio.com/)
   [![Extension Version](https://img.shields.io/badge/Version-1.0.9-success.svg)](#)
