@@ -1,5 +1,5 @@
 <div align="center">
-  <h1>🦅🦅 YChang Sound 🦅🦅</h1>
+  <h1>???? YChang Sound ????</h1>
 
   [![Visual Studio Code](https://img.shields.io/badge/VS%20Code-0078d7.svg?logo=visual-studio-code&logoColor=white)](https://code.visualstudio.com/)
   [![Extension Version](https://img.shields.io/badge/Version-1.0.9-success.svg)](#)
@@ -30,9 +30,10 @@ YChang.
 
 1. Install the **YChang Sound** extension.
 2. *(Optional)* Want a custom sound? Add your `.mp3`, `.wav`, or `.ogg` file to the extension's `sounds/` folder.
-3. Update the `ychang-sound.soundFile` setting if you changed the filename from default.
-4. Open the integrated terminal and run a command that intentionally fails.
-5. Enjoy your satisfying feedback sound! 🔊
+3. By default, the extension randomly plays one of the bundled YChang sounds on error.
+4. *(Optional)* To select a specific sound, disable `ychang-sound.randomize` and set `ychang-sound.soundFile`.
+5. Open the integrated terminal and run a command that intentionally fails.
+6. Enjoy your satisfying feedback sound! ??
 
 ## ⚙️ Configuration
 
@@ -41,7 +42,8 @@ Tweak YChang Sound to fit your exact workflow. Access these settings via `Prefer
 | Configuration Key | Type | Default | What it does |
 |-------------------|------|---------|-------------|
 | `ychang-sound.enabled` | `boolean` | `true` | Master switch to enable or disable the failure sound. |
-| `ychang-sound.soundFile` | `string` | `"error.mp3"` | The active audio file name residing in the `sounds/` folder. |
+| `ychang-sound.randomize` | `boolean` | `true` | Randomly choose one of the bundled YChang sounds on failure. |
+| `ychang-sound.soundFile` | `string` | `"YChang-sunny.mp3"` | Select a specific YChang sound (used only when randomize is disabled). |
 | `ychang-sound.volume` | `number` | `1.0` | Controls playback volume (Range: `0.0` - `1.0`). |
 
 ## 👨‍💻 Development
@@ -62,4 +64,5 @@ npm run watch
 > **Pro Tip:** Press `F5` in VS Code to quickly launch an Extension Development Host right in your workspace!
 
 ---
+
 
