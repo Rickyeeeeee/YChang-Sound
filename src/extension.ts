@@ -37,7 +37,7 @@ export function activate(context: vscode.ExtensionContext) {
 function playErrorSound(context: vscode.ExtensionContext) {
     const config = vscode.workspace.getConfiguration('ychang-sound');
     // const soundFile = config.get<string>('soundFile', 'error.mp3');
-    const soundFile = config.get<string>('soundFile', 'YChang-sunny.m4a');
+    const soundFile = config.get<string>('soundFile', 'YChang-sunny.mp3');
     const soundPath = path.join(context.extensionPath, 'sounds', soundFile);
 
     // Check if file exists
