@@ -2,7 +2,7 @@
   "name": "ychang-sound",
   "displayName": "YChang Sound",
   "description": "6",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "publisher": "Rickyeeeeee",
   "icon": "assets/cgv.jpg",
   "repository": {
@@ -70,5 +70,7 @@
     "@types/vscode": "^1.93.0",
     "typescript": "^5.7.3"
   },
-  "extensionKind": ["ui"]
+  "extensionKind": [
+    "ui"
+  ]
 }
