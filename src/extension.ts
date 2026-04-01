@@ -5,16 +5,20 @@ import { exec } from 'child_process';
 
 let disposable: vscode.Disposable | undefined;
 let soundSidebarView: vscode.WebviewView | undefined;
+const SLOT_SYMBOLS = ['CHERRY', 'LEMON', 'BELL', 'SEVEN', 'YCHANG'];
+let slotStats = { spins: 0, wins: 0 };
 
 class SoundSidebarViewProvider implements vscode.WebviewViewProvider {
     constructor(private readonly context: vscode.ExtensionContext) {}
 
     resolveWebviewView(webviewView: vscode.WebviewView): void {
+        slotStats = { spins: 0, wins: 0 };
         soundSidebarView = webviewView;
         webviewView.webview.options = { enableScripts: true };
         webviewView.webview.html = this.getHtml(
             webviewView.webview,
-            getConfiguredVolume()
+            getConfiguredVolume(),
+            slotStats
         );
 
         webviewView.webview.onDidReceiveMessage(async (message) => {
@@ -34,14 +38,42 @@ class SoundSidebarViewProvider implements vscode.WebviewViewProvider {
                 await vscode.workspace
                     .getConfiguration('ychang-sound')
                     .update('volume', clamped, vscode.ConfigurationTarget.Global);
+                return;
+            }
+
+            if (message.type === 'slotSpinRequest') {
+                const reels = spinSlotReels();
+                const isWin = reels[0] === reels[1] && reels[1] === reels[2];
+
+                slotStats = {
+                    spins: slotStats.spins + 1,
+                    wins: slotStats.wins + (isWin ? 1 : 0),
+                };
+
+                if (isWin && isSoundEnabled()) {
+                    playErrorSound(this.context, true, false);
+                }
+
+                webviewView.webview.postMessage({
+                    type: 'slotSpinResult',
+                    reels,
+                    isWin,
+                    stats: slotStats,
+                });
             }
         });
     }
 
-    private getHtml(webview: vscode.Webview, volume: number): string {
+    private getHtml(
+        webview: vscode.Webview,
+        volume: number,
+        stats: { spins: number; wins: number }
+    ): string {
         const nonce = getNonce();
         const percent = Math.round(volume * 100);
         const escapedVolume = volume.toFixed(2);
+        const initialWinRate =
+            stats.spins === 0 ? '0.0' : ((stats.wins / stats.spins) * 100).toFixed(1);
 
         return `<!DOCTYPE html>
 <html lang="en">
@@ -84,9 +116,46 @@ class SoundSidebarViewProvider implements vscode.WebviewViewProvider {
         button:hover {
             background: var(--vscode-button-hoverBackground);
         }
+        .section {
+            margin-top: 14px;
+            border-top: 1px solid var(--vscode-panel-border);
+            padding-top: 12px;
+        }
+        .title {
+            font-weight: 600;
+            margin: 0 0 8px 0;
+        }
+        .slot-reels {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+        .slot-reel {
+            text-align: center;
+            border: 1px solid var(--vscode-input-border, var(--vscode-panel-border));
+            background: var(--vscode-editorWidget-background);
+            border-radius: 4px;
+            padding: 8px 4px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+        .slot-result {
+            min-height: 20px;
+            margin-bottom: 8px;
+            color: var(--vscode-descriptionForeground);
+        }
+        .slot-stats {
+            color: var(--vscode-descriptionForeground);
+            font-size: 12px;
+            line-height: 1.5;
+            margin-top: 8px;
+        }
     </style>
 </head>
 <body>
+    <div class="title">Sound Controls</div>
     <div class="row">
         <label for="volume">Volume <span class="value" id="volumeValue">${percent}%</span></label>
         <input id="volume" type="range" min="0" max="1" step="0.01" value="${escapedVolume}" />
@@ -94,15 +163,84 @@ class SoundSidebarViewProvider implements vscode.WebviewViewProvider {
     <button id="playRandom" type="button">Play Random Sound</button>
     <button id="playConfigured" type="button">Play Configured Sound</button>
 
+    <div class="section">
+        <div class="title">Slot Machine</div>
+        <div class="slot-reels">
+            <div class="slot-reel" id="reel1">CHERRY</div>
+            <div class="slot-reel" id="reel2">LEMON</div>
+            <div class="slot-reel" id="reel3">BELL</div>
+        </div>
+        <div class="slot-result" id="slotResult">Spin to try your luck.</div>
+        <button id="spinSlot" type="button">Spin</button>
+        <div class="slot-stats">
+            <div>Spins: <span id="statSpins">${stats.spins}</span></div>
+            <div>Wins: <span id="statWins">${stats.wins}</span></div>
+            <div>Win Rate: <span id="statRate">${initialWinRate}%</span></div>
+        </div>
+    </div>
+
     <script nonce="${nonce}">
         const vscode = acquireVsCodeApi();
         const volumeEl = document.getElementById('volume');
         const volumeValueEl = document.getElementById('volumeValue');
         const playRandomEl = document.getElementById('playRandom');
         const playConfiguredEl = document.getElementById('playConfigured');
+        const spinSlotEl = document.getElementById('spinSlot');
+        const slotResultEl = document.getElementById('slotResult');
+        const reelEls = [
+            document.getElementById('reel1'),
+            document.getElementById('reel2'),
+            document.getElementById('reel3')
+        ];
+        const statSpinsEl = document.getElementById('statSpins');
+        const statWinsEl = document.getElementById('statWins');
+        const statRateEl = document.getElementById('statRate');
+
+        const symbols = ${JSON.stringify(SLOT_SYMBOLS)};
+        const spinDurationMs = 700;
+        let spinStartedAt = 0;
+        let spinTicker = null;
+        let pendingResult = null;
 
         const updateLabel = (value) => {
             volumeValueEl.textContent = \`\${Math.round(Number(value) * 100)}%\`;
+        };
+
+        const randomReels = () =>
+            Array.from({ length: 3 }, () => symbols[Math.floor(Math.random() * symbols.length)]);
+
+        const setReels = (reels) => {
+            reels.forEach((value, index) => {
+                reelEls[index].textContent = value;
+            });
+        };
+
+        const setStats = (stats) => {
+            statSpinsEl.textContent = String(stats.spins);
+            statWinsEl.textContent = String(stats.wins);
+            const rate = stats.spins === 0 ? '0.0' : ((stats.wins / stats.spins) * 100).toFixed(1);
+            statRateEl.textContent = \`\${rate}%\`;
+        };
+
+        const stopTicker = () => {
+            if (spinTicker !== null) {
+                clearInterval(spinTicker);
+                spinTicker = null;
+            }
+        };
+
+        const finalizeSpin = () => {
+            if (!pendingResult) {
+                return;
+            }
+            stopTicker();
+            setReels(pendingResult.reels);
+            setStats(pendingResult.stats);
+            slotResultEl.textContent = pendingResult.isWin
+                ? 'WIN! Random YChang sound played.'
+                : 'No match. Try again.';
+            spinSlotEl.disabled = false;
+            pendingResult = null;
         };
 
         document.addEventListener('dragstart', (event) => {
@@ -137,11 +275,38 @@ class SoundSidebarViewProvider implements vscode.WebviewViewProvider {
             vscode.postMessage({ type: 'playConfigured' });
         });
 
+        spinSlotEl.addEventListener('click', () => {
+            if (spinSlotEl.disabled) {
+                return;
+            }
+
+            spinSlotEl.disabled = true;
+            pendingResult = null;
+            spinStartedAt = Date.now();
+            slotResultEl.textContent = 'Spinning...';
+            stopTicker();
+            spinTicker = setInterval(() => {
+                setReels(randomReels());
+            }, 90);
+
+            vscode.postMessage({ type: 'slotSpinRequest' });
+        });
+
         window.addEventListener('message', (event) => {
             const message = event.data;
             if (message.type === 'volumeUpdated') {
                 volumeEl.value = String(message.value);
                 updateLabel(message.value);
+                return;
+            }
+
+            if (message.type === 'slotSpinResult') {
+                pendingResult = message;
+                const elapsed = Date.now() - spinStartedAt;
+                const remaining = Math.max(0, spinDurationMs - elapsed);
+                setTimeout(() => {
+                    finalizeSpin();
+                }, remaining);
             }
         });
     </script>
@@ -210,7 +375,11 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(configChange);
 }
 
-function playErrorSound(context: vscode.ExtensionContext, forceRandomize?: boolean) {
+function playErrorSound(
+    context: vscode.ExtensionContext,
+    forceRandomize?: boolean,
+    showPlayingToast = true
+) {
     const config = vscode.workspace.getConfiguration('ychang-sound');
     const randomize = forceRandomize ?? config.get<boolean>('randomize', true);
     const volume = getConfiguredVolume();
@@ -267,7 +436,9 @@ function playErrorSound(context: vscode.ExtensionContext, forceRandomize?: boole
         }
     }
 
-    vscode.window.showErrorMessage(`Playing: ${soundFile}`);
+    if (showPlayingToast) {
+        vscode.window.showErrorMessage(`Playing: ${soundFile}`);
+    }
     exec(command, (err) => {
         if (err) {
             console.error(`[YChang Sound] Failed to play sound: ${err.message}`);
@@ -298,6 +469,18 @@ function clampVolume(value: number): number {
         return 1;
     }
     return value;
+}
+
+function isSoundEnabled(): boolean {
+    return vscode.workspace.getConfiguration('ychang-sound').get<boolean>('enabled', true);
+}
+
+function spinSlotReels(): string[] {
+    return [
+        SLOT_SYMBOLS[Math.floor(Math.random() * SLOT_SYMBOLS.length)],
+        SLOT_SYMBOLS[Math.floor(Math.random() * SLOT_SYMBOLS.length)],
+        SLOT_SYMBOLS[Math.floor(Math.random() * SLOT_SYMBOLS.length)],
+    ];
 }
 
 function getNonce(): string {
