@@ -87,6 +87,7 @@ function playErrorSound(context: vscode.ExtensionContext) {
         }
     }
 
+    vscode.window.showErrorMessage(`Playing: ${soundFile}`);
     exec(command, (err) => {
         if (err) {
             console.error(`[YChang Sound] Failed to play sound: ${err.message}`);
