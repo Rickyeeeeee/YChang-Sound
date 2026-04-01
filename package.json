@@ -16,10 +16,29 @@
     "Other"
   ],
   "activationEvents": [
-    "onStartupFinished"
+    "onStartupFinished",
+    "onView:ychangSoundView"
   ],
   "main": "./out/extension.js",
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "ychangSound",
+          "title": "YChang",
+          "icon": "assets/ychang.svg"
+        }
+      ]
+    },
+    "views": {
+      "ychangSound": [
+        {
+          "id": "ychangSoundView",
+          "name": "Sounds",
+          "type": "webview"
+        }
+      ]
+    },
     "configuration": {
       "title": "YChang Sound",
       "properties": {
@@ -57,6 +76,14 @@
       {
         "command": "ychang-sound.testSound",
         "title": "YChang Sound: Test Sound"
+      },
+      {
+        "command": "ychang-sound.playRandom",
+        "title": "YChang Sound: Play Random Sound"
+      },
+      {
+        "command": "ychang-sound.playConfigured",
+        "title": "YChang Sound: Play Configured Sound"
       }
     ]
   },
