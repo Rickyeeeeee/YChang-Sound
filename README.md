@@ -11,9 +11,19 @@
 
 **Y Chang**~ whenever terminal error occurs.
 
+Turn every terminal failure into a mini slot-game moment: spin through random YChang sounds and wait for the lucky hit.
+
 ## ✨ Key Features
 
 YChang.
+
+## 🎬 Preview
+
+<video src="assets/ychang.mp4" controls width="720">
+  Your browser does not support the video tag.
+</video>
+
+[Download video](assets/ychang.mp4)
 
 ## 🚀 Getting Started
 
